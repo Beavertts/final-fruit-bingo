@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Import Axios if not already done
+import axios from 'axios';
 
 const styles = {
   container: {
@@ -24,7 +24,7 @@ const styles = {
   },
   image: {
     height: '30px',
-    width: '30px', // Adjust the size of the images
+    width: '30px',
   },
   message: {
     fontSize: '24px',
@@ -39,18 +39,59 @@ const App = () => {
   const [congratulations, setCongratulations] = useState(false);
   const [images, setImages] = useState([]);
 
-  // Make an HTTP request to fetch the images when the component mounts
   useEffect(() => {
+    // Fetch images from the server when the component mounts
     axios.get('http://localhost:5038/fruitbingoapp/GetImages')
       .then((response) => {
-        setImages(response.data.map(item => item.image));
+        // Extract fetched images and set them in the state
+        const fetchedImages = response.data;
+        setImages(fetchedImages);
+
+        // Generate the grid using the fetched images and set it in the state
+        const newGrid = generateGrid(fetchedImages);
+        setGrid(newGrid);
       })
       .catch((error) => {
         console.error('Error fetching images from the server:', error);
       });
   }, []);
 
-  //select image
+  // Function to generate the grid with random images
+  const generateGrid = (fetchedImages) => {
+    return Array.from({ length: 4 }, () =>
+      Array.from({ length: 4 }, () => {
+        // Select a random image from the fetched images
+        const randomImage = fetchedImages[Math.floor(Math.random() * fetchedImages.length)];
+        // Create an <img> element with the selected image and alt text
+        return <img src={randomImage.image} alt={randomImage.alt} style={styles.image} />;
+      })
+    );
+  };
+
+  // Function to check if the selected cells meet the criteria for congratulations
+  const checkForCongratulations = (cells) => {
+    if (cells.length === 3) {
+      const distinctRows = new Set();
+      const distinctCols = new Set();
+
+      cells.forEach((cell) => {
+        distinctRows.add(cell.row);
+        distinctCols.add(cell.col);
+      });
+
+      // Check if all selected cells are in a single row or column
+      if (distinctRows.size === 1 || distinctCols.size === 1) {
+        // Get the alt values of the selected cells and check if they are all 'apple'
+        const altValues = cells.map((cell) => grid[cell.row][cell.col].props.alt.toLowerCase());
+        if (altValues.every((alt) => alt === 'apple')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Function to handle cell click
   const handleCellClick = (rowIndex, colIndex) => {
     const cell = { row: rowIndex, col: colIndex };
     const cellIndex = selectedCells.findIndex(
@@ -59,41 +100,20 @@ const App = () => {
     );
 
     if (cellIndex !== -1) {
-      setSelectedCells((prevSelectedCells) =>
-        prevSelectedCells.filter((_, index) => index !== cellIndex)
-      );
+      // Cell is already selected, unselect it
+      const newSelectedCells = [...selectedCells];
+      newSelectedCells.splice(cellIndex, 1);
+      setSelectedCells(newSelectedCells);
     } else {
+      // Cell is not selected, select it
       setSelectedCells((prevSelectedCells) => [...prevSelectedCells, cell]);
     }
   };
 
-  //check if 3 apples images are selected
   useEffect(() => {
-    if (selectedCells.length > 0) {
-      for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
-        const row = grid[rowIndex].map((cell) => cell.props.alt);
-        if (row.join('').includes('AppleAppleApple')) {
-          setCongratulations(true);
-          break;
-        }
-      }
-    }
-  }, [grid, selectedCells]);
-
-  // Update the grid generation code to use the fetched images
-  useEffect(() => {
-    const newGrid = Array.from({ length: 4 }, () =>
-      Array.from({ length: 4 }, () =>
-        Math.random() < 0.5 ? (
-          <img src={images[0]} alt="Apple" style={styles.image} />
-        ) : (
-          <img src={images[1]} alt="Car" style={styles.image} />
-        )
-      )
-    );
-
-    setGrid(newGrid);
-  }, [images]);
+    // Check for congratulations whenever the selected cells change
+    setCongratulations(checkForCongratulations(selectedCells));
+  }, [selectedCells]);
 
   return (
     <div style={styles.container}>

@@ -2,10 +2,10 @@ var Express = require("express");
 const mongoose = require("mongoose");
 const cors = require('cors')
 const DATABASENAME = 'fruitbingoappdb';
+require('dotenv/config');
 
 var app = Express();
 app.use(cors()); //to allow resource sharing. because both server and client runs on differnt ports/domain
-const CONNECTION_STRING = "mongodb+srv://root:1IMKTQMoEjaiWGr7@cluster0.3e8phyf.mongodb.net/"
 
 // Define a Mongoose schema for your collection
 const fruitBingoAppSchema = new mongoose.Schema({
@@ -18,7 +18,7 @@ const fruitBingoAppSchema = new mongoose.Schema({
   const FruitBingoAppModel = mongoose.model('FruitBingoAppModel', fruitBingoAppSchema);
   
   mongoose
-  .connect(CONNECTION_STRING, {
+  .connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: DATABASENAME,
@@ -26,7 +26,8 @@ const fruitBingoAppSchema = new mongoose.Schema({
   .then(() => {
     console.log('MongoDB connected successfully');
 
-    app.listen(5038, () => {
+    const PORT = process.env.PORT
+    app.listen(PORT, () => {
       console.log('Server is running on port 5038');
     });
   })
