@@ -26,7 +26,7 @@ const fruitBingoAppSchema = new mongoose.Schema({
   .then(() => {
     console.log('MongoDB connected successfully');
 
-    const PORT = process.env.PORT
+    const PORT = process.env.PORT || 5038
     app.listen(PORT, () => {
       console.log('Server is running on port 5038');
     });
@@ -34,6 +34,16 @@ const fruitBingoAppSchema = new mongoose.Schema({
   .catch((error) => {
     console.error('Failed to connect to MongoDB:', error);
   });
+
+/*   app.get("/", (req, res) => {
+    FruitBingoAppModel.find({})
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }); */
 
 app.get("/fruitbingoapp/GetImages", async (request, response) => {
   try {

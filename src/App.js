@@ -41,7 +41,7 @@ const App = () => {
 
   useEffect(() => {
     // Fetch images from the server when the component mounts
-    axios.get('http://localhost:5038/fruitbingoapp/GetImages')
+    axios.get('https://fruit-bingo-server-70a1e5dc0205.herokuapp.com/fruitbingoapp/GetImages')
       .then((response) => {
         // Extract fetched images and set them in the state
         const fetchedImages = response.data;
